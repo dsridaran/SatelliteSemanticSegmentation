@@ -1,5 +1,8 @@
 import numpy as np
+import torch
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+import os
+import csv
 
 colors = {
     'Urban': np.array([170, 126, 63]),
@@ -173,3 +176,46 @@ def dice_score_multiclass(y_true, y_pred, labels):
         
         dice_scores.append(dice)
     return dice_scores
+    
+def append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts):
+    """
+    Append results of model evaluation to CSV file.
+
+    Parameters:
+        file_path (str): Path to CSV file where results will be stored.
+        folder (str): Folder identifier for outputs.
+        image (str): Identifier for image used.
+        tt (float): Text threshold parameter used.
+        bt (float): Box threshold parameter used.
+        urban_prompt, cloud_prompt, tree_prompt, water_prompt (str): Prompts used for each classification category.
+        cm (np.array): Confusion matrix.
+        accuracy (float): Accuracy score.
+        weighted_f1 (float): Weighted F1 score.
+        dice_scores (list): List of Dice scores for each class.
+        counts (dict): Dictionary containing counts of actual and predicted labels per class.
+    """
+    # Create file if required
+    if not os.path.isfile(file_path):
+        header = [
+            # Parameters
+            'image', 'folder', 'text_threshold', 'box_threshold', 'urban_prompt', 'cloud_prompt', 'tree_prompt', 'water_prompt', 
+            # Evaluation metrics
+            'accuracy', 'weighted_f1', 'urban_dice', 'cloud_dice', 'tree_dice', 'water_dice', 
+            # Pixel summary
+            'y_true_urban', 'y_true_cloud', 'y_true_tree', 'y_true_water', 'y_pred_urban', 'y_pred_cloud', 'y_pred_tree', 'y_pred_water'
+        ]
+        with open(file_path, 'w', newline = '') as file:
+            writer = csv.writer(file)
+            writer.writerow(header)
+
+    # Flatten dice scores and extract counts
+    dice_scores_flat = [dice_scores[i] for i in range(len(dice_scores))]
+    counts_ordered = [counts[f"y_true_{label}"] for label in ["Urban", "Cloud", "Tree", "Water"]] + [counts[f"y_pred_{label}"] for label in ["Urban", "Cloud", "Tree", "Water"]]
+
+    # Prepare single row of data to append
+    data_to_append = [image, folder, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, accuracy, weighted_f1, *dice_scores_flat, *counts_ordered]
+
+    # Append to the CSV file
+    with open(file_path, 'a', newline = '') as file:
+        writer = csv.writer(file)
+        writer.writerow(data_to_append)

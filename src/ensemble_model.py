@@ -1,11 +1,7 @@
 import os
-import csv
-import torch
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 from PIL import Image
 from plot_tools import plot_all_tensors, plot_full_result
-from model_utils import try_sam, determine_most_likely, evaluation_metrics
+from model_utils import try_sam, determine_most_likely, evaluation_metrics, append_results_to_csv
 
 def train_ensemble_model(sam, image, urban_prompt, cloud_prompt, tree_prompt, water_prompt, bt, tt, save_images = False, save_results = False):
     """
@@ -39,63 +35,21 @@ def train_ensemble_model(sam, image, urban_prompt, cloud_prompt, tree_prompt, wa
     ground_truth_img = Image.open(ground_truth)
     cm, accuracy, weighted_f1, dice_scores, counts = evaluation_metrics(ground_truth_img, result_tensor)
 
+    # Save results
+    if save_results:
+        file_path = '../results/ensemble_results.csv'
+        append_results_to_csv(file_path, "ensemble", image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts)
+        
     # Save plots
     if save_images:
         folder_path = f'../results/ensemble/{image}'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        # Plot individual tensors
-        filename = f'../results/ensemble/{image}/indiv_prompt_{urban_prompt}_{cloud_prompt}_{tree_prompt}_{water_prompt}_bt{bt}_tt{tt}.png'
-        plot_all_tensors(tensor_urban, tensor_cloud, tensor_tree, tensor_water, urban_prompt, cloud_prompt, tree_prompt, water_prompt, filename)
-        
-        # Plot raw, ground truth, and prediction
-        filename = f'../results/ensemble/{image}/combined_prompt_{urban_prompt}_{cloud_prompt}_{tree_prompt}_{water_prompt}_bt{bt}_tt{tt}.png'
-        plot_full_result(raw, ground_truth, prediction, filename)
-
-    # Create output folder for storing result images
-    if save_results:
-        file_path = '../results/ensemble_results.csv'
-        append_results_to_csv(file_path, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts)
-
-def append_results_to_csv(file_path, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts):
-    """
-    Append results of model evaluation to CSV file.
-
-    Parameters:
-        file_path (str): Path to CSV file where results will be stored.
-        image (str): Identifier for image used.
-        tt (float): Text threshold parameter used.
-        bt (float): Box threshold parameter used.
-        urban_prompt, cloud_prompt, tree_prompt, water_prompt (str): Prompts used for each classification category.
-        cm (np.array): Confusion matrix.
-        accuracy (float): Accuracy score.
-        weighted_f1 (float): Weighted F1 score.
-        dice_scores (list): List of Dice scores for each class.
-        counts (dict): Dictionary containing counts of actual and predicted labels per class.
-    """
-    # Create file if required
-    if not os.path.isfile(file_path):
-        header = [
-            # Parameters
-            'image', 'text_threshold', 'box_threshold', 'urban_prompt', 'cloud_prompt', 'tree_prompt', 'water_prompt', 
-            # Evaluation metrics
-            'accuracy', 'weighted_f1', 'urban_dice', 'cloud_dice', 'tree_dice', 'water_dice', 
-            # Pixel summary
-            'y_true_urban', 'y_true_cloud', 'y_true_tree', 'y_true_water', 'y_pred_urban', 'y_pred_cloud', 'y_pred_tree', 'y_pred_water'
-        ]
-        with open(file_path, 'w', newline = '') as file:
-            writer = csv.writer(file)
-            writer.writerow(header)
-
-    # Flatten dice scores and extract counts
-    dice_scores_flat = [dice_scores[i] for i in range(len(dice_scores))]
-    counts_ordered = [counts[f"y_true_{label}"] for label in ["Urban", "Cloud", "Tree", "Water"]] + [counts[f"y_pred_{label}"] for label in ["Urban", "Cloud", "Tree", "Water"]]
-
-    # Prepare single row of data to append
-    data_to_append = [image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, accuracy, weighted_f1, *dice_scores_flat, *counts_ordered]
-
-    # Append to the CSV file
-    with open(file_path, 'a', newline = '') as file:
-        writer = csv.writer(file)
-        writer.writerow(data_to_append)
+    # Plot individual tensors
+    filename = f'../results/ensemble/{image}/indiv_prompt_{urban_prompt}_{cloud_prompt}_{tree_prompt}_{water_prompt}_bt{bt}_tt{tt}.png'
+    plot_all_tensors(tensor_urban, tensor_cloud, tensor_tree, tensor_water, urban_prompt, cloud_prompt, tree_prompt, water_prompt, filename, save_images)
+    
+    # Plot raw, ground truth, and prediction
+    filename = f'../results/ensemble/{image}/combined_prompt_{urban_prompt}_{cloud_prompt}_{tree_prompt}_{water_prompt}_bt{bt}_tt{tt}.png'
+    return plot_full_result(raw, ground_truth, prediction, filename, save_images)

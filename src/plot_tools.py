@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
-def plot_all_tensors(tensor_urban, tensor_cloud, tensor_tree, tensor_water, urban_prompt, cloud_prompt, tree_prompt, water_prompt, filename):
+def plot_all_tensors(tensor_urban, tensor_cloud, tensor_tree, tensor_water, urban_prompt, cloud_prompt, tree_prompt, water_prompt, filename, save_images):
     """
     Plots four tensors in a single figure with individual color maps and titles based on specified prompts.
     
@@ -8,30 +9,32 @@ def plot_all_tensors(tensor_urban, tensor_cloud, tensor_tree, tensor_water, urba
         tensor_urban, tensor_cloud, tensor_tree, tensor_water (torch.Tensor): Tensors to be plotted.
         urban_prompt, cloud_prompt, tree_prompt, water_prompt (str): Prompts used to generate the respective tensors.
         filename (str): File path where the resulting plot will be saved.
+        save_images (bool): Saves image if True.
     """
     fig, axes = plt.subplots(1, 4, figsize = (18, 6), constrained_layout = True)
     
     # Plot urban tensor
     im1 = plot_individual_tensor(axes[0], tensor_urban, "Reds")
-    plt.colorbar(im1, ax = axes[0]); axes[0].set_title(f'Prompt: {urban_prompt}')
+    plt.colorbar(im1, ax = axes[0]); axes[0].set_title(f'Prompt: {urban_prompt}', fontsize = 20)
     
     # Plot cloud tensor
     im2 = plot_individual_tensor(axes[1], tensor_cloud, "Purples")
-    plt.colorbar(im2, ax = axes[1]); axes[1].set_title(f'Prompt: {cloud_prompt}')
+    plt.colorbar(im2, ax = axes[1]); axes[1].set_title(f'Prompt: {cloud_prompt}', fontsize = 20)
     
     # Plot tree tensor
     im3 = plot_individual_tensor(axes[2], tensor_tree, "Greens")
-    plt.colorbar(im3, ax = axes[2]); axes[2].set_title(f'Prompt: {tree_prompt}')
+    plt.colorbar(im3, ax = axes[2]); axes[2].set_title(f'Prompt: {tree_prompt}', fontsize = 20)
     
     # Plot water tensor
     im4 = plot_individual_tensor(axes[3], tensor_water, "Blues")
-    plt.colorbar(im4, ax = axes[3]); axes[3].set_title(f'Prompt: {water_prompt}')
+    plt.colorbar(im4, ax = axes[3]); axes[3].set_title(f'Prompt: {water_prompt}', fontsize = 20)
     
-    fig.savefig(filename)
+    if save_images:
+        fig.savefig(filename)
     plt.clf()
     plt.close(fig) 
     
-def plot_full_result(raw, ground_truth, prediction, filename):
+def plot_full_result(raw, ground_truth, prediction, filename, save_images):
     """
     Plots a comparison of a raw image, its manually labeled ground truth, and a model's prediction in a single figure.
 
@@ -40,24 +43,24 @@ def plot_full_result(raw, ground_truth, prediction, filename):
         ground_truth (str): File path to the image of manually labeled ground truth.
         prediction (np.array): The prediction image data.
         filename (str): File path where the resulting plot will be saved.
+        save_images (bool): Saves image if True.
     """
     fig, axes = plt.subplots(1, 3, figsize = (18, 6), constrained_layout = True)
     fig.subplots_adjust(top = 0.9)
     
     # Plot raw image
     img = mpimg.imread(raw)
-    axes[0].imshow(img); axes[0].axis('off'); axes[0].set_title('Raw Image');
+    axes[0].imshow(img); axes[0].axis('off'); axes[0].set_title('Raw Image', fontsize = 28);
 
     # Plot ground truth
     ground_truth_img = mpimg.imread(ground_truth)
-    axes[1].imshow(ground_truth_img); axes[1].axis('off'); axes[1].set_title('Manually Labeled Image')
+    axes[1].imshow(ground_truth_img); axes[1].axis('off'); axes[1].set_title('Manually Labeled Image', fontsize = 28)
 
     # Plot prediction
-    axes[2].imshow(prediction); axes[2].axis('off'); axes[2].set_title('Ensemble Prediction')
+    axes[2].imshow(prediction); axes[2].axis('off'); axes[2].set_title('Ensemble Prediction', fontsize = 28)
     
-    fig.savefig(filename)
-    plt.clf()
-    plt.close(fig)  
+    if save_images:
+        fig.savefig(filename)
 
 def plot_individual_tensor(ax, tensor, color):
     """
@@ -83,10 +86,6 @@ def plot_overlayed_tensors(tensors, colors, title):
         tensors (list of array-like): A list of tensors to be overlayed and plotted.
         colors (list of str): A list of colormap strings corresponding to each tensor.
         title (str): The title of the plot.
-
-    Details:
-        This function creates an overlay of multiple tensors each with a specified colormap. 
-        It uses semi-transparent overlays to allow visualization of overlapping areas.
     """
     plt.figure(figsize = (6, 6))
     vmax = max(tensor.max().item() for tensor in tensors)
