@@ -1,1 +1,3 @@
-# satellite_semantic_segmentation
+# Semantic Segmentation of Satelitte Images
+
+![Logo](images/example.png "Ex")
