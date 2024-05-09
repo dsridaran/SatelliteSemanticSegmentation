@@ -29,7 +29,7 @@ def train_individual_model(sam, image, folder, prompt, bt, tt, object_being_pred
     if object_being_predicted == "Urban":
         urban_prompt = prompt
     elif object_being_predicted == "Water":
-        water_prompt = promp
+        water_prompt = prompt
     elif object_being_predicted == "Tree":
         tree_prompt = prompt
     elif object_being_predicted == "Cloud":
@@ -44,12 +44,12 @@ def train_individual_model(sam, image, folder, prompt, bt, tt, object_being_pred
 
     # Extract performance metrics
     ground_truth_img = Image.open(ground_truth)
-    cm, accuracy, weighted_f1, dice_scores, counts = evaluation_metrics(ground_truth_img, result_tensor)
+    accuracy, weighted_f1, dice_scores, counts = evaluation_metrics(ground_truth_img, result_tensor)
     
     # Save results
     if save_results:
         file_path = '../results/individual_results.csv'
-        append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts)
+        append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, accuracy, weighted_f1, dice_scores, counts)
 
     # Save plots
     if save_images:

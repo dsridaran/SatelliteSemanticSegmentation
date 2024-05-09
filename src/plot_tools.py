@@ -50,14 +50,14 @@ def plot_full_result(raw, ground_truth, prediction, filename, save_images):
     
     # Plot raw image
     img = mpimg.imread(raw)
-    axes[0].imshow(img); axes[0].axis('off'); axes[0].set_title('Raw Image', fontsize = 28);
+    axes[0].imshow(img); axes[0].axis('off'); axes[0].set_title('Raw', fontsize = 28);
 
     # Plot ground truth
     ground_truth_img = mpimg.imread(ground_truth)
-    axes[1].imshow(ground_truth_img); axes[1].axis('off'); axes[1].set_title('Manually Labeled Image', fontsize = 28)
+    axes[1].imshow(ground_truth_img); axes[1].axis('off'); axes[1].set_title('Manually Labeled', fontsize = 28)
 
     # Plot prediction
-    axes[2].imshow(prediction); axes[2].axis('off'); axes[2].set_title('Ensemble Prediction', fontsize = 28)
+    axes[2].imshow(prediction); axes[2].axis('off'); axes[2].set_title('Prediction', fontsize = 28)
     
     if save_images:
         fig.savefig(filename)

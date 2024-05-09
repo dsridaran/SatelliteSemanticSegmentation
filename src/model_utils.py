@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
+from scipy.spatial import distance
 import os
 import csv
 
@@ -33,6 +34,7 @@ def try_sam(model, image_path, prompt, box_threshold, text_threshold, height, wi
     except Exception as e:
         masks = torch.zeros((1, height, width), dtype = torch.bool)
         logits = torch.tensor([0])
+    logits[logits < text_threshold] = 0
     return get_logits(masks, logits)
 
 def get_logits(masks, logits):
@@ -118,7 +120,6 @@ def evaluation_metrics(ground_truth, prediction):
     y_pred = prediction.flatten()
 
     # Calculate evaluation metrics
-    cm = confusion_matrix(y_true, y_pred, labels = labels, normalize = 'true')
     accuracy = accuracy_score(y_true, y_pred)
     weighted_f1 = f1_score(y_true, y_pred, average = 'weighted')
     dice_scores = dice_score_multiclass(y_true, y_pred, labels)
@@ -127,7 +128,7 @@ def evaluation_metrics(ground_truth, prediction):
     counts = {f"y_true_{label}": np.count_nonzero(y_true == label) for label in labels}
     counts.update({f"y_pred_{label}": np.count_nonzero(y_pred == label) for label in labels})
 
-    return cm, accuracy, weighted_f1, dice_scores, counts
+    return accuracy, weighted_f1, dice_scores, counts
     
 def get_ground_truth(groud_truth, color_map = colors):
     """
@@ -143,13 +144,14 @@ def get_ground_truth(groud_truth, color_map = colors):
     image_array = np.array(groud_truth)
     if image_array.shape[-1] > 3:
         image_array = image_array[:, :, :3]
-        
-    classification_map = []
-    for pixel in image_array.reshape(-1, 3):
-        distances = {key: np.linalg.norm(pixel - color) for key, color in color_map.items()}
-        classification_map.append(min(distances, key = distances.get))
-    return np.array(classification_map).reshape(image_array.shape[:2])
-    
+    colors = np.array(list(color_map.values()))
+    labels = list(color_map.keys())
+    pixels = image_array.reshape(-1, 3)
+    dist = distance.cdist(pixels, colors, 'euclidean')
+    nearest_color_indices = np.argmin(dist, axis = 1)
+    classified_pixels = np.array([labels[idx] for idx in nearest_color_indices])
+    return classified_pixels.reshape(image_array.shape[0], image_array.shape[1])
+
 def dice_score_multiclass(y_true, y_pred, labels):
     """
     Compute the Dice score for each class in a multiclass setting.
@@ -172,12 +174,12 @@ def dice_score_multiclass(y_true, y_pred, labels):
         if union.sum() == 0:
             dice = 1.0 if intersection.sum() == 0 else 0.0
         else:
-            dice = 2. * intersection.sum() / (true_binary.sum() + pred_binary.sum())
+            dice = 2.0 * intersection.sum() / (true_binary.sum() + pred_binary.sum())
         
         dice_scores.append(dice)
     return dice_scores
     
-def append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts):
+def append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, accuracy, weighted_f1, dice_scores, counts):
     """
     Append results of model evaluation to CSV file.
 
@@ -188,7 +190,6 @@ def append_results_to_csv(file_path, folder, image, tt, bt, urban_prompt, cloud_
         tt (float): Text threshold parameter used.
         bt (float): Box threshold parameter used.
         urban_prompt, cloud_prompt, tree_prompt, water_prompt (str): Prompts used for each classification category.
-        cm (np.array): Confusion matrix.
         accuracy (float): Accuracy score.
         weighted_f1 (float): Weighted F1 score.
         dice_scores (list): List of Dice scores for each class.

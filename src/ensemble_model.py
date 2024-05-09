@@ -33,12 +33,12 @@ def train_ensemble_model(sam, image, urban_prompt, cloud_prompt, tree_prompt, wa
     
     # Extract performance metrics
     ground_truth_img = Image.open(ground_truth)
-    cm, accuracy, weighted_f1, dice_scores, counts = evaluation_metrics(ground_truth_img, result_tensor)
+    accuracy, weighted_f1, dice_scores, counts = evaluation_metrics(ground_truth_img, result_tensor)
 
     # Save results
     if save_results:
         file_path = '../results/ensemble_results.csv'
-        append_results_to_csv(file_path, "ensemble", image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, cm, accuracy, weighted_f1, dice_scores, counts)
+        append_results_to_csv(file_path, "ensemble", image, tt, bt, urban_prompt, cloud_prompt, tree_prompt, water_prompt, accuracy, weighted_f1, dice_scores, counts)
         
     # Save plots
     if save_images:
