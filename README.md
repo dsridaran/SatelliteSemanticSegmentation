@@ -1,5 +1,7 @@
 # Semantic Segmentation of Satelitte Images
 
+This code was developed by Dilan SriDaran.
+
 ![Logo](images/example.png "Ex")
 
 ## Description
