@@ -2,6 +2,8 @@
 
 This code was developed by Dilan SriDaran.
 
+Satellite data was sourced from MITCriticalData (https://huggingface.co/datasets/MITCriticalData/SAT1_dataset_5_top_cities). 
+
 ![Logo](images/example.png "Ex")
 
 ## Description
