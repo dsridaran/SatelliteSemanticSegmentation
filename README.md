@@ -1,6 +1,6 @@
 # Semantic Segmentation of Satelitte Images
 
-This code was developed by Dilan SriDaran.
+This code was developed by Dilan SriDaran in 2024.
 
 Satellite data was sourced from MITCriticalData (https://huggingface.co/datasets/MITCriticalData/SAT1_dataset_5_top_cities). 
 
